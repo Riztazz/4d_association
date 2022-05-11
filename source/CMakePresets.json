@@ -1,0 +1,40 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "Debug",
+            "displayName": "WindowsDebugBuild",
+            "description": "",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables":
+			{
+				"CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_CONFIGURATION_TYPES": "Debug",
+				"CMAKE_CXX_STANDARD": "23"
+            }
+        },
+		{
+            "name": "Release",
+            "displayName": "WindowsReleaseBuild",
+            "description": "",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables":
+			{
+				"CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+				"CMAKE_BUILD_TYPE": "Release",
+				"CMAKE_CONFIGURATION_TYPES": "Release",
+				"CMAKE_CXX_STANDARD": "23"
+            }
+        }
+    ]
+}

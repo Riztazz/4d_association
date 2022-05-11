@@ -1,3 +1,5 @@
 build/
 include/
 library/
+output/
+.vs/

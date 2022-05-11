@@ -1,0 +1,16 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+    "name": "4dassociation",
+    "version": "0.0.0",
+    "builtin-baseline": "9f04533f307a8560cc1cc5c1fdee0d88d6d7d818",
+    "dependencies": 
+    [
+        "jsoncpp",
+        "eigen3",
+        {
+            "name": "opencv4",
+            "version>=": "4.5.4#2",
+            "features": [ "contrib", "dnn" ]
+        }
+    ]
+}

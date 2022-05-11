@@ -5,9 +5,9 @@ include(CheckIncludeFileCXX)
 
 SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" "${CMAKE_MODULE_PATH}")
 
-if(UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-endif(UNIX)
+#if(UNIX)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+#endif(UNIX)
 
 if (MSVC_VERSION GREATER_EQUAL "1900")
     include(CheckCXXCompilerFlag)
@@ -24,11 +24,9 @@ endif(HAVE_CSTDINT)
 
 find_package(OpenCV REQUIRED)
 
-if(UNIX)
-    find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(JSONCPP jsoncpp)
-endif(UNIX)
+find_package (Eigen3 REQUIRED)    
+#find_package(PkgConfig REQUIRED)    
+find_package(jsoncpp REQUIRED)    
 
 add_subdirectory(cli_demo)
 add_subdirectory(four_d_association)
