@@ -5,6 +5,7 @@
 #include "hungarian_algorithm.h"
 #include <opencv2/opencv.hpp>
 #include <json/json.h>
+#include <filesystem>
 
 
 // #define SAVE_RESULT
@@ -24,7 +25,7 @@ Eigen::Matrix4Xf MappingToShelf(const Eigen::Matrix4Xf& skel19)
 	const Eigen::Vector3f zDir(0.f, 0.f, 1.f);
 	const Eigen::Vector3f shoulderCenter = (skel19.block<3, 1>(0, 5) + skel19.block<3, 1>(0, 6)) / 2.f;
 	const Eigen::Vector3f headCenter = (skel19.block<3, 1>(0, 9) + skel19.block<3, 1>(0, 10)) / 2.f;
-	
+
 	shelf15.block<3, 1>(0, 12) = shoulderCenter + (headCenter - shoulderCenter)*0.5;
 	shelf15.block<3, 1>(0, 13) = shelf15.block<3, 1>(0, 12) + faceDir * 0.125 + zDir * 0.145;
 	return shelf15;
@@ -69,20 +70,22 @@ void PrintEvaluation(const std::vector<Eigen::VectorXi>& correctJCnt) {
 int main()
 {
 	// init
-	std::map<std::string, Camera> cams = ParseCameras("../data/shelf/calibration.json");
+
+	std::filesystem::path sourcePath = "E:/Cpp/Projects/4d_association";
+	std::map<std::string, Camera> cams = ParseCameras(sourcePath.string() + "/data/shelf/calibration.json");
 	Eigen::Matrix3Xf projs(3, cams.size() * 4);
 	std::vector<cv::VideoCapture> videos(cams.size());
 	std::vector<cv::Mat> rawImgs(cams.size());
 	std::vector<std::vector<OpenposeDetection>> seqDetections(cams.size());
-	std::vector<std::map<int, Eigen::Matrix4Xf>> gt = ParseSkels("../data/shelf/gt.txt");
+	std::vector<std::map<int, Eigen::Matrix4Xf>> gt = ParseSkels(sourcePath.string() + "/data/shelf/gt.txt");
 	std::vector<std::map<int, Eigen::Matrix4Xf>> skels;
 
 #pragma omp parallel for
 	for (int i = 0; i < cams.size(); i++) {
 		auto iter = std::next(cams.begin(), i);
-		videos[i] = cv::VideoCapture("../data/shelf/video/" + iter->first + ".mp4");
+		videos[i] = cv::VideoCapture(sourcePath.string() + "/data/shelf/video/" + iter->first + ".mp4");
 		projs.middleCols(4 * i, 4) = iter->second.eiProj;
-		seqDetections[i] = ParseDetections("../data/shelf/detection/" + iter->first + ".txt");
+		seqDetections[i] = ParseDetections(sourcePath.string() + "/data/shelf/detection/" + iter->first + ".txt");
 		cv::Size imgSize(int(videos[i].get(cv::CAP_PROP_FRAME_WIDTH)), int(videos[i].get(cv::CAP_PROP_FRAME_HEIGHT)));
 		for (auto&&detection : seqDetections[i]) {
 			for (auto&& joints : detection.joints) {
@@ -107,9 +110,9 @@ int main()
 	associater.SetNodeMultiplex(true);
 
 #ifdef RUN_OLD_VERSION
-	SkelFittingUpdater skelUpdater(SKEL19, "../data/skel/SKEL19_old");
+	SkelFittingUpdater skelUpdater(SKEL19, sourcePath.string() + "/data/skel/SKEL19_old");
 #else
-	SkelFittingUpdater skelUpdater(SKEL19, "../data/skel/SKEL19");
+	SkelFittingUpdater skelUpdater(SKEL19, sourcePath.string() + "/data/skel/SKEL19");
 #endif
 	skelUpdater.SetTriangulateThresh(0.05f);
 	skelUpdater.SetMinTrackCnt(5);
@@ -168,7 +171,8 @@ int main()
 			iter->second.emplace_back(c);
 		}
 
-#ifdef SAVE_RESULT
+		constexpr bool SaveResults = true;
+#ifdef SaveResults
 		skels.emplace_back(skelUpdater.GetSkel3d());
 		const int layoutCols = 3;
 		cv::Mat detectImg, assocImg, reprojImg, gtImg;
@@ -196,14 +200,14 @@ int main()
 
 		}
 
-		cv::imwrite("../output/detect/" + std::to_string(frameIdx) + ".jpg", detectImg);
-		cv::imwrite("../output/assoc/" + std::to_string(frameIdx) + ".jpg", assocImg);
-		cv::imwrite("../output/reproj/" + std::to_string(frameIdx) + ".jpg", reprojImg);
-		cv::imwrite("../output/gt/" + std::to_string(frameIdx) + ".jpg", gtImg);
+		cv::imwrite(sourcePath.string() + "/output/detect/" + std::to_string(frameIdx) + ".jpg", detectImg);
+		cv::imwrite(sourcePath.string() + "/output/assoc/" + std::to_string(frameIdx) + ".jpg", assocImg);
+		cv::imwrite(sourcePath.string() + "/output/reproj/" + std::to_string(frameIdx) + ".jpg", reprojImg);
+		cv::imwrite(sourcePath.string() + "/output/gt/" + std::to_string(frameIdx) + ".jpg", gtImg);
 #endif
 
 	}
-	SerializeSkels(skels, "../data/shelf/skel.txt");
+	SerializeSkels(skels, sourcePath.string() + "/data/shelf/skel.txt");
 	for (const auto& pair : correctJCnt) {
 		std::cout << "identity: " << pair.first << std::endl;
 		PrintEvaluation(pair.second);
